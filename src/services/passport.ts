@@ -3,7 +3,7 @@ import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { Strategy as OAuth2Strategy } from 'passport-oauth2';
-import prisma from './prisma';
+// import prisma from './prisma';
 import { comparePassword } from '../helpers/password';
 
 // Local Strategy
