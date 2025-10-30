@@ -6,9 +6,14 @@ import helmet from 'helmet';
 import pino from 'pino';
 import { initRedis, closeRedis } from './services/redis';
 import passport from './services/passport';
+import { connectDB } from './config/db';
 
 const app = express();
-const logger = pino({ level: 'info', transport: { target: 'pino-pretty' } });
+
+export const logger = pino({
+  level: 'info',
+  transport: { target: 'pino-pretty' },
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -33,15 +38,14 @@ app.use(passport.initialize());
 // If using sessions: app.use(passport.session());
 
 app.get('/', (req: Request, res: Response) => {
-  res
-    .status(403)
-    .json({
-      error: 'Access denied',
-      message: 'Unauthorized access to this resource',
-    });
+  res.status(403).json({
+    error: 'Access denied',
+    message: 'Unauthorized access to this resource',
+  });
 });
 
 (async () => {
+  await connectDB();
   await initRedis();
 })();
 

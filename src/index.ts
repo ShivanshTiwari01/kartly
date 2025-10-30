@@ -1,7 +1,7 @@
-import app from './app';
 import debug from 'debug';
 import http from 'http';
 import { green } from 'chalk';
+import app from './app';
 
 const createPort = (port = 8000) => {
   if (process.env.NODE_ENV === 'test') {
