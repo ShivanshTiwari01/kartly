@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-export const signup = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
   } catch (error) {
