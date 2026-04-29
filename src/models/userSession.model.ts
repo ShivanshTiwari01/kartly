@@ -1,28 +1,29 @@
 import mongoose from 'mongoose';
 import User from './user.model';
 
-const userProfileSchema = new mongoose.Schema(
+const userSession = new mongoose.Schema(
   {
-    firstName: {
+    accessToken: {
       type: String,
       required: true,
     },
-    lastName: {
+    refreshToken: {
       type: String,
       required: true,
+    },
+    deviceDetails: {
+      type: JSON,
+    },
+    userLocation: {
+      type: JSON,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: User,
       required: true,
-      unique: true,
     },
   },
   {
     timestamps: true,
   }
 );
-
-const UserProfile = mongoose.model('UserProfile', userProfileSchema);
-
-export default UserProfile;
