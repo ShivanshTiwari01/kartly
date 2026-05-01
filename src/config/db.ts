@@ -3,8 +3,6 @@ import { logger } from '../app';
 
 const MONGO_URI = process.env.MONGO_URI || '';
 
-console.log(MONGO_URI);
-
 export const connectDB = async (): Promise<void> => {
   try {
     await mongoose.connect(MONGO_URI);
