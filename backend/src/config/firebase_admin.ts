@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 
-import serviceAccount from './ecommerce-app-46783-firebase-adminsdk-fbsvc-dd573a0d1a.json';
+import serviceAccount from './ecommerce-app-46783-firebase-adminsdk-fbsvc-09a088b568.json';
 
 const ecommercedb = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount as any),
