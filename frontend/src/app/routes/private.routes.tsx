@@ -16,9 +16,7 @@ const WishlistPage = lazy(() => import('@pages/Wishlist/WishlistPage'));
 const Fallback = () => null;
 
 const PrivateRoute = () => {
-  // Replace with actual selector once auth slice is implemented:
-  // const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
-  const isAuthenticated = useAppSelector(() => false);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   return isAuthenticated ? <Outlet /> : <Navigate to={ROUTES.LOGIN} replace />;
 };
 

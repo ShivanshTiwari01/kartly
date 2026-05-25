@@ -1,11 +1,13 @@
 import { type PropsWithChildren } from 'react';
 import Header from '@components/layout/Header/Header';
+import Footer from '@components/layout/Footer/Footer';
 
 export default function MainLayout({ children }: PropsWithChildren) {
   return (
-    <div className='min-h-screen bg-background text-text'>
+    <div className='flex min-h-screen flex-col bg-background text-text'>
       <Header />
-      <main className='mx-auto max-w-7xl p-4'>{children}</main>
+      <main className='flex-1'>{children}</main>
+      <Footer />
     </div>
   );
 }

@@ -10,6 +10,10 @@ router.post('/signin', controller.signin);
 
 router.post('/refresh-token', authentication, controller.updateToken);
 
-router.post('/signout', controller.signout);
+router.post('/signout', authentication, controller.signout);
+
+router.post('/forgot-password', controller.forgotPassword);
+
+router.post('/reset-password', controller.resetPassword);
 
 export default router;

@@ -1,7 +1,14 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { userRegisterSchema, userSignInSchema } from './auth.validation';
+import crypto from 'crypto';
+import {
+  userRegisterSchema,
+  userSignInSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from './auth.validation';
 import { logger } from '../../app';
+import { getRedis } from '../../services/redis';
 import {
   signAccessToken,
   signRefreshToken,
@@ -55,14 +62,14 @@ export const register = async (req: Request, res: Response) => {
     });
 
     const payload = {
-      id: user._id,
+      userId: user._id,
       email: user.email,
     };
 
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
-    const userSession = await UserSession.create({
+    await UserSession.create({
       accessToken,
       refreshToken,
       accessTokenExpiry: accessTokenExpiry,
@@ -73,6 +80,10 @@ export const register = async (req: Request, res: Response) => {
     return res.status(201).json({
       success: true,
       message: 'User created successfully',
+      token: {
+        accessToken,
+        refreshToken,
+      },
     });
   } catch (error) {
     logger.error({ Error: error });
@@ -117,14 +128,14 @@ export const signin = async (req: Request, res: Response) => {
     }
 
     const payload = {
-      id: user._id,
+      userId: user._id,
       email: user.email,
     };
 
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
-    const userSession = await UserSession.create({
+    await UserSession.create({
       accessToken,
       refreshToken,
       accessTokenExpiry: accessTokenExpiry,
@@ -145,6 +156,85 @@ export const signin = async (req: Request, res: Response) => {
       success: false,
       message: 'Internal server error',
     });
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const parsed = forgotPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json({ success: false, message: parsed.error.issues[0].message });
+    }
+
+    const { email } = parsed.data;
+    const user = await User.findOne({ email });
+
+    // Don't leak whether the account exists
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message:
+          'If an account with that email exists, a reset token has been issued.',
+      });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const redis = getRedis();
+    await redis.setex(`reset_password:${token}`, 3600, email);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password reset token generated.',
+      resetToken: token,
+    });
+  } catch (error) {
+    logger.error({ Error: error });
+    return res
+      .status(500)
+      .json({ success: false, message: 'Internal server error' });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const parsed = resetPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json({ success: false, message: parsed.error.issues[0].message });
+    }
+
+    const { token, newPassword } = parsed.data;
+    const redis = getRedis();
+    const email = await redis.get(`reset_password:${token}`);
+
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid or expired reset token' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await User.findByIdAndUpdate(user._id, { password: hashedPassword });
+    await redis.del(`reset_password:${token}`);
+
+    return res
+      .status(200)
+      .json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    logger.error({ Error: error });
+    return res
+      .status(500)
+      .json({ success: false, message: 'Internal server error' });
   }
 };
 
